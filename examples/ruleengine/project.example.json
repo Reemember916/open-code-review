@@ -1,0 +1,12 @@
+{
+  "paths": ["Src"],
+  "role_config": ".opencodereview/roles.json",
+  "baseline": ".opencodereview/baseline.json",
+  "compile_commands": "build/compile_commands.json",
+  "include": ["Include"],
+  "define": ["CPU1"],
+  "undefine": [],
+  "std": "c99",
+  "platform": "",
+  "fail_on": "review"
+}

@@ -1,0 +1,38 @@
+# IDEA
+.idea/*
+*.iml
+*.ipr
+*.iws
+
+dist/
+.claude/plans
+.claude/settings.local.json
+
+CLAUDE.md
+pages/package-lock.json
+scripts/hooks/
+scripts/publish/.env.internal
+CHANGELOG.md
+
+vendor/
+temp/
+
+# Ignore downloaded Go binary, but keep JS entry point
+!bin/ocr.js
+bin/opencodereview
+
+/opencodereview
+
+/node_modules
+
+# Mac OS X
+.DS_Store
+
+# Eclipse git ignore#
+.project
+.classpath
+.settings/
+*.factorypath
+
+*.run.xml
+**/spoon.classpath.tmp

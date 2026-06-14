@@ -1,0 +1,3 @@
+- 避免引入版本为 latest 或 *，建议引入具体的版本号。注意：版本号并非新增的代码行时请忽略
+- 依赖冲突或重复声明：同一依赖同时存在于 dependencies 和 devDependencies
+- 必需工具依赖未声明：scripts 里出现如 eslint、jest、prettier 等工具名称但未在 devDependencies 中体现

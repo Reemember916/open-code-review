@@ -1,0 +1,158 @@
+{
+  "version": "0.1.0",
+  "rules": [
+    {
+      "id": "embedded.memory.no_strcpy",
+      "title": "禁止使用 strcpy",
+      "severity": "high",
+      "scope": "line",
+      "backend": "regex",
+      "disposition": "blocking",
+      "match": {
+        "pattern": "\\bstrcpy\\s*\\("
+      },
+      "message": "使用 strcpy 无法限制目标缓冲区长度，可能导致缓冲区溢出。",
+      "suggestion": "改用带长度约束的拷贝函数，并显式保证字符串结尾。",
+      "tags": ["embedded", "memory", "security"]
+    },
+    {
+      "id": "embedded.memory.no_sprintf",
+      "title": "禁止使用 sprintf",
+      "severity": "high",
+      "scope": "line",
+      "backend": "regex",
+      "disposition": "blocking",
+      "match": {
+        "pattern": "\\bsprintf\\s*\\("
+      },
+      "message": "使用 sprintf 无法限制输出长度，可能写越界。",
+      "suggestion": "改用 snprintf，并使用目标缓冲区大小限制输出长度。",
+      "tags": ["embedded", "memory", "security"]
+    },
+    {
+      "id": "embedded.loop.suspicious_infinite_wait",
+      "title": "可疑无限等待循环",
+      "severity": "medium",
+      "scope": "line",
+      "backend": "regex",
+      "where": {
+        "function_name_not_any": ["main"]
+      },
+      "disposition": "review",
+      "match": {
+        "pattern": "\\bwhile\\s*\\(\\s*(1|true|TRUE)\\s*\\)",
+        "block_not_any": ["timeout", "Timeout", "TIMEOUT", "watchdog", "Watchdog", "Wdg", "WDG", "break", "return", "Error", "ERROR"]
+      },
+      "message": "无限等待循环需要明确退出、超时或喂狗策略，否则可能导致系统卡死。",
+      "suggestion": "增加超时计数、错误返回或明确的 watchdog 处理。",
+      "tags": ["embedded", "realtime", "control-flow"]
+    },
+    {
+      "id": "embedded.isr.no_delay_call",
+      "title": "ISR 中禁止调用延时函数",
+      "severity": "high",
+      "scope": "line",
+      "backend": "call",
+      "disposition": "review",
+      "where": {
+        "function_role": "isr"
+      },
+      "match": {
+        "calls_any": ["Delay", "DelayMs", "delay", "sleep", "Sleep"]
+      },
+      "message": "中断上下文中调用延时函数会破坏实时性，可能阻塞关键中断处理。",
+      "suggestion": "在 ISR 中只置标志位，将耗时操作移到任务或主循环上下文。",
+      "tags": ["embedded", "isr", "realtime"]
+    },
+    {
+      "id": "misra_like.assignment_in_condition",
+      "title": "条件表达式中出现赋值",
+      "severity": "medium",
+      "scope": "line",
+      "backend": "regex",
+      "disposition": "review",
+      "match": {
+        "pattern": "\\b(if|while)\\s*\\([^\\n\\)]*[^=!<>]=[^=][^\\n\\)]*\\)"
+      },
+      "message": "条件表达式中出现赋值，可读性差且容易与比较运算混淆。",
+      "suggestion": "将赋值移出条件表达式，或显式说明这是有意为之。",
+      "tags": ["misra-like", "readability", "control-flow"]
+    },
+    {
+      "id": "cppcheck.redundant_assignment",
+      "title": "重复赋值",
+      "severity": "medium",
+      "scope": "line",
+      "backend": "cppcheck",
+      "disposition": "review",
+      "disposition_overrides": [
+        {
+          "if_message_contains_any": ["CANTRS.all", "CANRMP.all"],
+          "disposition": "report_only"
+        }
+      ],
+      "match": {
+        "any": ["redundantAssignment"]
+      },
+      "message": "变量在旧值被使用前再次赋值，可能存在冗余逻辑或遗漏使用。",
+      "suggestion": "确认第一次赋值是否应被使用；如果确为冗余，删除无效赋值。",
+      "tags": ["cppcheck", "data-flow", "maintainability"]
+    },
+    {
+      "id": "cppcheck.unread_variable",
+      "title": "赋值后未读取",
+      "severity": "medium",
+      "scope": "line",
+      "backend": "cppcheck",
+      "disposition": "report_only",
+      "match": {
+        "any": ["unreadVariable"]
+      },
+      "message": "变量赋值后未被读取，可能存在无效赋值、遗漏使用或条件编译配置问题。",
+      "suggestion": "确认该赋值是否应参与后续逻辑；若仅为寄存器 shadow 或条件编译导致，考虑添加豁免说明。",
+      "tags": ["cppcheck", "data-flow", "maintainability"]
+    },
+    {
+      "id": "cppcheck.unused_variable",
+      "title": "未使用变量",
+      "severity": "low",
+      "scope": "line",
+      "backend": "cppcheck",
+      "disposition": "report_only",
+      "match": {
+        "any": ["unusedVariable"]
+      },
+      "message": "变量声明后未使用，可能是遗留代码或条件编译残留。",
+      "suggestion": "删除未使用变量，或确认对应宏配置下是否需要保留。",
+      "tags": ["cppcheck", "maintainability"]
+    },
+    {
+      "id": "cppcheck.uninitialized_variable",
+      "title": "变量可能未初始化即使用",
+      "severity": "high",
+      "scope": "line",
+      "backend": "cppcheck",
+      "disposition": "blocking",
+      "match": {
+        "any": ["uninitvar", "uninitStructMember"]
+      },
+      "message": "变量可能在初始化前被使用，可能导致不可预测行为。",
+      "suggestion": "确保所有控制流路径在使用前完成初始化。",
+      "tags": ["cppcheck", "data-flow", "safety"]
+    },
+    {
+      "id": "cppcheck.array_index_out_of_bounds",
+      "title": "数组访问可能越界",
+      "severity": "high",
+      "scope": "line",
+      "backend": "cppcheck",
+      "disposition": "blocking",
+      "match": {
+        "any": ["arrayIndexOutOfBounds", "bufferAccessOutOfBounds"]
+      },
+      "message": "数组或缓冲区访问可能越界，可能导致内存破坏。",
+      "suggestion": "检查数组长度、下标范围和循环边界。",
+      "tags": ["cppcheck", "memory", "safety"]
+    }
+  ]
+}

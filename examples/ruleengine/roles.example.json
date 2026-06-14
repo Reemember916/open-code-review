@@ -1,0 +1,17 @@
+{
+  "roles": [
+    {
+      "role": "isr",
+      "function": "*ISR*"
+    },
+    {
+      "role": "driver",
+      "path": "**/DSPDriver/**/*.c"
+    },
+    {
+      "role": "storage",
+      "path": "**/storage/**/*.c"
+    }
+  ]
+}
+
