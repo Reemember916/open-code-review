@@ -231,3 +231,108 @@ func TestKnownRegexFalsePositiveInComment(t *testing.T) {
 		}
 	}
 }
+
+// --- Round 2 rules: 7 new rules from blueprint section 10 ---
+
+func TestRound2_IsrBlockingCall(t *testing.T) {
+	rules := loadEmbeddedRuleset(t)
+	findings, err := New(CallBackend{}).Analyze(Request{
+		Files:     []FileInput{loadFixture(t, "round2/isr_blocking_call.c")},
+		RoleHints: []RoleHint{{Role: "isr", Function: "AdcIsrHandler"}},
+	}, rules)
+	if err != nil {
+		t.Fatalf("Analyze: %v", err)
+	}
+	hits := findingsByRule(findings, "embedded.isr.no_blocking_call")
+	if len(hits) == 0 {
+		t.Fatalf("expected isr blocking call finding, got %+v", findings)
+	}
+	if hits[0].Role != "isr" {
+		t.Fatalf("expected role=isr, got %q", hits[0].Role)
+	}
+}
+
+func TestRound2_IsrDynamicAlloc(t *testing.T) {
+	rules := loadEmbeddedRuleset(t)
+	findings, err := New(CallBackend{}).Analyze(Request{
+		Files:     []FileInput{loadFixture(t, "round2/isr_dynamic_alloc.c")},
+		RoleHints: []RoleHint{{Role: "isr", Function: "SpiDmaIsr"}},
+	}, rules)
+	if err != nil {
+		t.Fatalf("Analyze: %v", err)
+	}
+	hits := findingsByRule(findings, "embedded.isr.no_dynamic_allocation")
+	if len(hits) == 0 {
+		t.Fatalf("expected isr dynamic alloc finding, got %+v", findings)
+	}
+}
+
+func TestRound2_LoopRequireWatchdog(t *testing.T) {
+	rules := loadEmbeddedRuleset(t)
+	findings, err := New(RegexBackend{}).Analyze(Request{
+		Files: []FileInput{loadFixture(t, "round2/loop_no_exit.c")},
+	}, rules)
+	if err != nil {
+		t.Fatalf("Analyze: %v", err)
+	}
+	hits := findingsByRule(findings, "embedded.loop.require_watchdog_or_exit")
+	if len(hits) == 0 {
+		t.Fatalf("expected loop watchdog/exit finding, got %+v", findings)
+	}
+}
+
+func TestRound2_RegisterRawAccess(t *testing.T) {
+	rules := loadEmbeddedRuleset(t)
+	findings, err := New(RegexBackend{}).Analyze(Request{
+		Files: []FileInput{loadFixture(t, "round2/register_raw_access.c")},
+	}, rules)
+	if err != nil {
+		t.Fatalf("Analyze: %v", err)
+	}
+	hits := findingsByRule(findings, "embedded.register.use_access_macro")
+	if len(hits) == 0 {
+		t.Fatalf("expected register raw access finding, got %+v", findings)
+	}
+}
+
+func TestRound2_RegisterRmw(t *testing.T) {
+	rules := loadEmbeddedRuleset(t)
+	findings, err := New(RegexBackend{}).Analyze(Request{
+		Files: []FileInput{loadFixture(t, "round2/register_rmw.c")},
+	}, rules)
+	if err != nil {
+		t.Fatalf("Analyze: %v", err)
+	}
+	hits := findingsByRule(findings, "embedded.register.no_read_modify_write_on_status_clear")
+	if len(hits) == 0 {
+		t.Fatalf("expected register RMW finding, got %+v", findings)
+	}
+}
+
+func TestRound2_SwitchRequiresDefault(t *testing.T) {
+	rules := loadEmbeddedRuleset(t)
+	findings, err := New(RegexBackend{}).Analyze(Request{
+		Files: []FileInput{loadFixture(t, "round2/switch_no_default.c")},
+	}, rules)
+	if err != nil {
+		t.Fatalf("Analyze: %v", err)
+	}
+	hits := findingsByRule(findings, "embedded.state.switch_requires_default")
+	if len(hits) == 0 {
+		t.Fatalf("expected switch finding (hint), got %+v", findings)
+	}
+}
+
+func TestRound2_MacroArgsParenthesized(t *testing.T) {
+	rules := loadEmbeddedRuleset(t)
+	findings, err := New(RegexBackend{}).Analyze(Request{
+		Files: []FileInput{loadFixture(t, "round2/macro_unparenthesized.c")},
+	}, rules)
+	if err != nil {
+		t.Fatalf("Analyze: %v", err)
+	}
+	hits := findingsByRule(findings, "misra_like.macro_args_parenthesized")
+	if len(hits) == 0 {
+		t.Fatalf("expected macro args parenthesized finding (hint), got %+v", findings)
+	}
+}

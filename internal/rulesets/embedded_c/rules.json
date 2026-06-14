@@ -1,5 +1,5 @@
 {
-  "version": "0.1.0",
+  "version": "0.2.0",
   "rules": [
     {
       "id": "embedded.memory.no_strcpy",
@@ -13,7 +13,11 @@
       },
       "message": "使用 strcpy 无法限制目标缓冲区长度，可能导致缓冲区溢出。",
       "suggestion": "改用带长度约束的拷贝函数，并显式保证字符串结束。",
-      "tags": ["embedded", "memory", "security"]
+      "tags": [
+        "embedded",
+        "memory",
+        "security"
+      ]
     },
     {
       "id": "embedded.memory.no_sprintf",
@@ -27,7 +31,11 @@
       },
       "message": "使用 sprintf 无法限制输出长度，可能写越界。",
       "suggestion": "改用 snprintf，并使用目标缓冲区大小限制输出长度。",
-      "tags": ["embedded", "memory", "security"]
+      "tags": [
+        "embedded",
+        "memory",
+        "security"
+      ]
     },
     {
       "id": "embedded.loop.suspicious_infinite_wait",
@@ -36,16 +44,34 @@
       "scope": "line",
       "backend": "regex",
       "where": {
-        "function_name_not_any": ["main"]
+        "function_name_not_any": [
+          "main"
+        ]
       },
       "disposition": "review",
       "match": {
         "pattern": "\\bwhile\\s*\\(\\s*(1|true|TRUE)\\s*\\)",
-        "block_not_any": ["timeout", "Timeout", "TIMEOUT", "watchdog", "Watchdog", "Wdg", "WDG", "break", "return", "Error", "ERROR"]
+        "block_not_any": [
+          "timeout",
+          "Timeout",
+          "TIMEOUT",
+          "watchdog",
+          "Watchdog",
+          "Wdg",
+          "WDG",
+          "break",
+          "return",
+          "Error",
+          "ERROR"
+        ]
       },
       "message": "无限等待循环需要明确退出、超时或看门狗策略，否则可能导致系统卡死。",
       "suggestion": "增加超时计数、错误返回或明确的 watchdog 处理。",
-      "tags": ["embedded", "realtime", "control-flow"]
+      "tags": [
+        "embedded",
+        "realtime",
+        "control-flow"
+      ]
     },
     {
       "id": "embedded.isr.no_delay_call",
@@ -58,11 +84,21 @@
         "function_role": "isr"
       },
       "match": {
-        "calls_any": ["Delay", "DelayMs", "delay", "sleep", "Sleep"]
+        "calls_any": [
+          "Delay",
+          "DelayMs",
+          "delay",
+          "sleep",
+          "Sleep"
+        ]
       },
       "message": "中断上下文中调用延时函数会破坏实时性，可能阻塞关键中断处理。",
       "suggestion": "在 ISR 中只置标志位，将耗时操作移到任务或主循环上下文。",
-      "tags": ["embedded", "isr", "realtime"]
+      "tags": [
+        "embedded",
+        "isr",
+        "realtime"
+      ]
     },
     {
       "id": "misra_like.assignment_in_condition",
@@ -76,7 +112,11 @@
       },
       "message": "条件表达式中出现赋值，可读性差且容易与比较运算混淆。",
       "suggestion": "将赋值移出条件表达式，或显式说明这是有意为之。",
-      "tags": ["misra-like", "readability", "control-flow"]
+      "tags": [
+        "misra-like",
+        "readability",
+        "control-flow"
+      ]
     },
     {
       "id": "cppcheck.redundant_assignment",
@@ -88,16 +128,25 @@
       "disposition_overrides": [
         {
           "_comment": "CAN 控制器状态寄存器 (CANTRS/CANRMP 等) 的全位 .all 写入符合硬件手册要求，并非冗余。",
-          "if_message_contains_any": ["CANTRS.all", "CANRMP.all"],
+          "if_message_contains_any": [
+            "CANTRS.all",
+            "CANRMP.all"
+          ],
           "disposition": "report_only"
         }
       ],
       "match": {
-        "any": ["redundantAssignment"]
+        "any": [
+          "redundantAssignment"
+        ]
       },
       "message": "变量在旧值被使用前再次赋值，可能存在冗余逻辑或遗忌使用。",
       "suggestion": "确认第一次赋值是否应被使用；如果确为冗余，删除无效赋值。",
-      "tags": ["cppcheck", "data-flow", "maintainability"]
+      "tags": [
+        "cppcheck",
+        "data-flow",
+        "maintainability"
+      ]
     },
     {
       "id": "cppcheck.unread_variable",
@@ -109,16 +158,25 @@
       "disposition_overrides": [
         {
           "_comment": "当 cppcheck 标记为 inconclusive 时赋值未被读到的判断不可靠（依赖数据流），保持 report_only 不重复升级。",
-          "if_message_contains_any": ["inconclusive", "Assume"],
+          "if_message_contains_any": [
+            "inconclusive",
+            "Assume"
+          ],
           "disposition": "report_only"
         }
       ],
       "match": {
-        "any": ["unreadVariable"]
+        "any": [
+          "unreadVariable"
+        ]
       },
       "message": "变量赋值后未被读取，可能存在无效赋值、遗忌使用或条件编译配置问题。",
       "suggestion": "确认该赋值是否应参与后续逻辑；若仅为寄存器 shadow 或条件编译导致，考虑添加抑制说明。",
-      "tags": ["cppcheck", "data-flow", "maintainability"]
+      "tags": [
+        "cppcheck",
+        "data-flow",
+        "maintainability"
+      ]
     },
     {
       "id": "cppcheck.unused_variable",
@@ -130,16 +188,24 @@
       "disposition_overrides": [
         {
           "_comment": "do{}while(0) 占位宏的“假使用”、跨文件 extern 的 volatile 设备句柄，cppcheck 经常误报。",
-          "if_message_contains_any": ["never used", "only assigned"],
+          "if_message_contains_any": [
+            "never used",
+            "only assigned"
+          ],
           "disposition": "report_only"
         }
       ],
       "match": {
-        "any": ["unusedVariable"]
+        "any": [
+          "unusedVariable"
+        ]
       },
       "message": "变量声明后未使用，可能是残留代码或条件编译遗畄。",
       "suggestion": "删除未使用变量，或确认对应宏配置下是否需要保留。",
-      "tags": ["cppcheck", "maintainability"]
+      "tags": [
+        "cppcheck",
+        "maintainability"
+      ]
     },
     {
       "id": "cppcheck.uninitialized_variable",
@@ -162,11 +228,18 @@
         }
       ],
       "match": {
-        "any": ["uninitvar", "uninitStructMember"]
+        "any": [
+          "uninitvar",
+          "uninitStructMember"
+        ]
       },
       "message": "变量可能在初始化前被使用，可能导致不可预测行为。",
       "suggestion": "确保所有控制流路径在使用前完成初始化。",
-      "tags": ["cppcheck", "data-flow", "safety"]
+      "tags": [
+        "cppcheck",
+        "data-flow",
+        "safety"
+      ]
     },
     {
       "id": "cppcheck.array_index_out_of_bounds",
@@ -187,11 +260,189 @@
         }
       ],
       "match": {
-        "any": ["arrayIndexOutOfBounds", "bufferAccessOutOfBounds"]
+        "any": [
+          "arrayIndexOutOfBounds",
+          "bufferAccessOutOfBounds"
+        ]
       },
       "message": "数组或缓冲区访问可能越界，可能导致内存破坏。",
       "suggestion": "检查数组长度、下标范围和循环边界。",
-      "tags": ["cppcheck", "memory", "safety"]
+      "tags": [
+        "cppcheck",
+        "memory",
+        "safety"
+      ]
+    },
+    {
+      "id": "embedded.isr.no_blocking_call",
+      "title": "ISR 中禁止调用阻塞 API",
+      "severity": "high",
+      "scope": "line",
+      "backend": "call",
+      "where": {
+        "function_role": "isr"
+      },
+      "match": {
+        "calls_any": [
+          "SemaphorePend",
+          "OSSemPend",
+          "QueueRecvBlocking",
+          "OSQPend",
+          "xQueueReceive",
+          "xSemaphoreTake",
+          "ulTaskNotifyTake",
+          "WaitForSingleObject",
+          "WaitForMultipleObjects"
+        ]
+      },
+      "message": "ISR 上下文中调用阻塞 API 会破坏实时性，可能挂起整个中断。",
+      "suggestion": "在 ISR 中只置标志位或发布非阻塞通知，将阻塞接收移到任务上下文。",
+      "tags": [
+        "embedded",
+        "isr",
+        "realtime"
+      ]
+    },
+    {
+      "id": "embedded.isr.no_dynamic_allocation",
+      "title": "ISR 中禁止动态内存分配",
+      "severity": "high",
+      "scope": "line",
+      "backend": "call",
+      "where": {
+        "function_role": "isr"
+      },
+      "match": {
+        "calls_any": [
+          "malloc",
+          "calloc",
+          "realloc",
+          "free",
+          "kmalloc",
+          "kfree",
+          "kcalloc",
+          "krealloc",
+          "pvPortMalloc",
+          "vPortFree"
+        ]
+      },
+      "message": "ISR 中动态分配/释放内存耗时且非确定，可能导致堆碎片和实时性丢失。",
+      "suggestion": "在初始化阶段预分配所有需要的内存，ISR 中只使用预分配的对象。",
+      "tags": [
+        "embedded",
+        "isr",
+        "memory",
+        "realtime"
+      ]
+    },
+    {
+      "id": "embedded.loop.require_watchdog_or_exit",
+      "title": "主循环需要明确退出/超时/看门狗策略",
+      "severity": "medium",
+      "scope": "line",
+      "backend": "regex",
+      "where": {
+        "function_name_not_any": [
+          "main"
+        ]
+      },
+      "match": {
+        "pattern": "\\bwhile\\s*\\(\\s*(1|true|TRUE)\\s*\\)",
+        "block_not_any": [
+          "watchdog",
+          "Watchdog",
+          "WatchDog",
+          "Wdg",
+          "WDG",
+          "WD",
+          "Timeout",
+          "timeout",
+          "TIMEOUT",
+          "break",
+          "return",
+          "Error",
+          "ERROR",
+          "Fault",
+          "FAULT",
+          "Shutdown",
+          "SHUTDOWN"
+        ]
+      },
+      "message": "无限等待循环需要明确的退出/超时/看门狗策略，否则可能造成系统卡死。",
+      "suggestion": "增加看门狗喂狗、明确 break/return 条件或可监控的 timeout 计数。",
+      "tags": [
+        "embedded",
+        "realtime",
+        "control-flow"
+      ]
+    },
+    {
+      "id": "embedded.register.use_access_macro",
+      "title": "直接地址访问寄存器应使用宏封装",
+      "severity": "medium",
+      "scope": "line",
+      "backend": "regex",
+      "match": {
+        "pattern": "\\*\\s*\\(\\s*(?:volatile\\s+)?[A-Za-z_][A-Za-z0-9_\\s\\*]*\\*?\\s*\\)\\s*0x[0-9A-Fa-f]+\\b"
+      },
+      "message": "代码中出现 volatile 指针强制转换访问寄存器地址，缺少统一访问宏。",
+      "suggestion": "使用项目约定的访问宏（例如 REG_READ/REG_WRITE/CLR_BITS/SET_BITS），便于移植、静态检查和单测。",
+      "tags": [
+        "embedded",
+        "register",
+        "portability"
+      ]
+    },
+    {
+      "id": "embedded.register.no_read_modify_write_on_status_clear",
+      "title": "状态寄存器读改写清除存在风险",
+      "severity": "high",
+      "scope": "line",
+      "backend": "regex",
+      "match": {
+        "pattern": "\\b[A-Z][A-Z0-9_]{1,}\\s*(=|\\+=|-=|\\|=|\\&=|\\^=)\\s*[^;\\n]+"
+      },
+      "message": "对全大写寄存器名使用 = / += / -= 赋值可能踩到状态寄存器读改写坑位（先读后清/写1清零）。",
+      "suggestion": "确认这是数据寄存器还是状态寄存器；若为状态寄存器，查阅手册使用官方推荐的清零/置位宏。",
+      "tags": [
+        "embedded",
+        "register",
+        "safety"
+      ]
+    },
+    {
+      "id": "embedded.state.switch_requires_default",
+      "title": "switch 语句缺少 default 分支",
+      "severity": "medium",
+      "scope": "line",
+      "backend": "regex",
+      "match": {
+        "pattern": "\\bswitch\\s*\\([^)]+\\)\\s*\\{"
+      },
+      "message": "switch 语句开头命中。规则仅作为提示：实际是否有 default 需要人工/更智能后端确认。",
+      "suggestion": "为 switch 增加 default 分支，至少包含 assert/log/上报。",
+      "tags": [
+        "embedded",
+        "state",
+        "control-flow"
+      ]
+    },
+    {
+      "id": "misra_like.macro_args_parenthesized",
+      "title": "宏定义中的参数未加括号",
+      "severity": "medium",
+      "scope": "line",
+      "backend": "regex",
+      "match": {
+        "pattern": "^\\s*#define\\s+[A-Za-z_][A-Za-z0-9_]*\\([a-zA-Z_][a-zA-Z0-9_]*\\)[^\\\\\\n]*\\b[a-zA-Z_][a-zA-Z0-9_]*\\b[^\\\\\\n]*\\b[a-zA-Z_][a-zA-Z0-9_]*\\b"
+      },
+      "message": "宏函数体中可能存在未加括号的参数。规则仅作启发：实际是否安全需要人工确认括号。",
+      "suggestion": "宏函数体中所有形参引用都应加括号，例如 #define SQUARE(x) ((x) * (x))。",
+      "tags": [
+        "misra-like",
+        "macro",
+        "safety"
+      ]
     }
   ]
 }
