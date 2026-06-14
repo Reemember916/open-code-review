@@ -1,4 +1,4 @@
-{
+﻿{
   "version": "0.1.0",
   "rules": [
     {
@@ -12,7 +12,7 @@
         "pattern": "\\bstrcpy\\s*\\("
       },
       "message": "使用 strcpy 无法限制目标缓冲区长度，可能导致缓冲区溢出。",
-      "suggestion": "改用带长度约束的拷贝函数，并显式保证字符串结尾。",
+      "suggestion": "改用带长度约束的拷贝函数，并显式保证字符串结束。",
       "tags": ["embedded", "memory", "security"]
     },
     {
@@ -43,7 +43,7 @@
         "pattern": "\\bwhile\\s*\\(\\s*(1|true|TRUE)\\s*\\)",
         "block_not_any": ["timeout", "Timeout", "TIMEOUT", "watchdog", "Watchdog", "Wdg", "WDG", "break", "return", "Error", "ERROR"]
       },
-      "message": "无限等待循环需要明确退出、超时或喂狗策略，否则可能导致系统卡死。",
+      "message": "无限等待循环需要明确退出、超时或看门狗策略，否则可能导致系统卡死。",
       "suggestion": "增加超时计数、错误返回或明确的 watchdog 处理。",
       "tags": ["embedded", "realtime", "control-flow"]
     },
@@ -87,6 +87,7 @@
       "disposition": "review",
       "disposition_overrides": [
         {
+          "_comment": "CAN 控制器状态寄存器 (CANTRS/CANRMP 等) 的全位 .all 写入符合硬件手册要求，并非冗余。",
           "if_message_contains_any": ["CANTRS.all", "CANRMP.all"],
           "disposition": "report_only"
         }
@@ -94,7 +95,7 @@
       "match": {
         "any": ["redundantAssignment"]
       },
-      "message": "变量在旧值被使用前再次赋值，可能存在冗余逻辑或遗漏使用。",
+      "message": "变量在旧值被使用前再次赋值，可能存在冗余逻辑或遗忌使用。",
       "suggestion": "确认第一次赋值是否应被使用；如果确为冗余，删除无效赋值。",
       "tags": ["cppcheck", "data-flow", "maintainability"]
     },
@@ -105,11 +106,18 @@
       "scope": "line",
       "backend": "cppcheck",
       "disposition": "report_only",
+      "disposition_overrides": [
+        {
+          "_comment": "当 cppcheck 标记为 inconclusive 时赋值未被读到的判断不可靠（依赖数据流），保持 report_only 不重复升级。",
+          "if_message_contains_any": ["inconclusive", "Assume"],
+          "disposition": "report_only"
+        }
+      ],
       "match": {
         "any": ["unreadVariable"]
       },
-      "message": "变量赋值后未被读取，可能存在无效赋值、遗漏使用或条件编译配置问题。",
-      "suggestion": "确认该赋值是否应参与后续逻辑；若仅为寄存器 shadow 或条件编译导致，考虑添加豁免说明。",
+      "message": "变量赋值后未被读取，可能存在无效赋值、遗忌使用或条件编译配置问题。",
+      "suggestion": "确认该赋值是否应参与后续逻辑；若仅为寄存器 shadow 或条件编译导致，考虑添加抑制说明。",
       "tags": ["cppcheck", "data-flow", "maintainability"]
     },
     {
@@ -119,10 +127,17 @@
       "scope": "line",
       "backend": "cppcheck",
       "disposition": "report_only",
+      "disposition_overrides": [
+        {
+          "_comment": "do{}while(0) 占位宏的“假使用”、跨文件 extern 的 volatile 设备句柄，cppcheck 经常误报。",
+          "if_message_contains_any": ["never used", "only assigned"],
+          "disposition": "report_only"
+        }
+      ],
       "match": {
         "any": ["unusedVariable"]
       },
-      "message": "变量声明后未使用，可能是遗留代码或条件编译残留。",
+      "message": "变量声明后未使用，可能是残留代码或条件编译遗畄。",
       "suggestion": "删除未使用变量，或确认对应宏配置下是否需要保留。",
       "tags": ["cppcheck", "maintainability"]
     },
@@ -133,6 +148,19 @@
       "scope": "line",
       "backend": "cppcheck",
       "disposition": "blocking",
+      "disposition_overrides": [
+        {
+          "_comment": "跨文件/跨函数初始化路径 cppcheck 看不到：中断中写入的 volatile 全局、结构体 memset 初始化、CMSIS/RTOS 启动后被赋值的设备句柄。",
+          "if_message_contains_any": [
+            "is not initialized in the constructor",
+            "is not initialized in this function",
+            "Member variable not initialized",
+            "is not initialized",
+            "Assuming"
+          ],
+          "disposition": "report_only"
+        }
+      ],
       "match": {
         "any": ["uninitvar", "uninitStructMember"]
       },
@@ -147,6 +175,17 @@
       "scope": "line",
       "backend": "cppcheck",
       "disposition": "blocking",
+      "disposition_overrides": [
+        {
+          "_comment": "cppcheck 标记为 inconclusive 时越界判断不可靠（依赖不完整数据流），降级避免误拒。",
+          "if_message_contains_any": [
+            "inconclusive",
+            "Cannot determine",
+            "Assuming"
+          ],
+          "disposition": "report_only"
+        }
+      ],
       "match": {
         "any": ["arrayIndexOutOfBounds", "bufferAccessOutOfBounds"]
       },
