@@ -304,8 +304,11 @@ func TestRound2_RegisterRmw(t *testing.T) {
 		t.Fatalf("Analyze: %v", err)
 	}
 	hits := findingsByRule(findings, "embedded.register.no_read_modify_write_on_status_clear")
-	if len(hits) == 0 {
-		t.Fatalf("expected register RMW finding, got %+v", findings)
+	if len(hits) != 1 {
+		t.Fatalf("expected exactly one register RMW finding, got %+v", hits)
+	}
+	if hits[0].Line != 3 {
+		t.Fatalf("expected only '|=' to match on line 3, got line %d", hits[0].Line)
 	}
 }
 
